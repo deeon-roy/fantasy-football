@@ -1,14 +1,13 @@
-from player import Player
-from tile_map import TileMap
-from team import Team
+from src.players.player import Player
+from src.map.tile_map import TileMap
+from src.players.team import Team
 import pygame
 from pygame.locals import *
 # ---------------------------
+from src.helpers.conversions import convert_to_2d_index
 # other imports
-import math
 import sys
-import time
-import random
+
 
 # constants
 SCREENSIZE = WIDTH, HEIGHT = 1000, 1000
@@ -32,15 +31,13 @@ def main():
     player_two = Player(100, 4, tile_map.tile_list[4].centre)
 
     teams = [Team([player_one], (210, 127, 30)), Team([player_two], (30, 127, 210))]
-    # team_one = Team([player_one], (210, 127, 30))
-    # team_two = Team([player_two], (30, 127, 210))
 
     for player in teams[0].players:
         tile_map.team_map[0].append(
-            [int(player.tile_index / 8), int(player.tile_index % 8)])
+            convert_to_2d_index(player.tile_index))
     for player in teams[1].players:
         tile_map.team_map[1].append(
-            [int(player.tile_index / 8), int(player.tile_index % 8)])
+            convert_to_2d_index(player.tile_index))
 
     while True:
         mouse_pos = [pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]]
@@ -60,14 +57,23 @@ def main():
                         tile_map.select_tile(mouse_tile_index)
                         if not mouse_tile.selected:
                             mouse_tile.toggle_hover()
-                elif event.button == 3:
-                    tile_map.add_collisions([[0, 1], [1, 1], [2, 2]])
-                    print(tile_map.collision_map)
+                # elif event.button == 3:
+                #     tile_map.add_collisions([[0, 1], [1, 1], [2, 2]])
+                #     print(tile_map.collision_map)
 
         _VARS['surf'].fill((115, 115, 115))
         for tile in tile_map.tile_list:
             tile.draw_tile()
 
+        for index, team in enumerate(teams):
+            team_map = []
+            for player in team.players:
+                team_map.append(convert_to_2d_index(player.tile_index))
+
+            tile_map.team_map[index] = team_map 
+
+        tile_map.set_collisions()
+        
         for index, tile in enumerate(tile_map.tile_list):
             # display tile indicies
             txt_surface = my_font.render(f'{index}', False, (0, 0, 0))
@@ -96,7 +102,7 @@ def main():
                     player.move()
                 elif len(player.path) > 1:
                     
-                    if [int(player.path[-2] / 8), int(player.path[-2] % 8)] in tile_map.team_map[abs(tile_map.team_turn - 1)]:
+                    if convert_to_2d_index(player.path[-2]) in tile_map.team_map[abs(tile_map.team_turn - 1)]:
                         player.path.pop()
                     else: 
                         current_tile_index = tile_map.tile_list[player.path.pop(
@@ -111,22 +117,17 @@ def main():
                     player.movement_path = None
                     tile_map.path = None
                     print(player.tile_index)
-                    tile_map.team_map[tile_map.team_turn] = [[int(player.tile_index / 8), int(player.tile_index % 8)]]
+                    tile_map.team_map[tile_map.team_turn] = [convert_to_2d_index(player.tile_index)]
                     print('team map')
                     print(tile_map.team_map)
+                    print(tile_map.collision_map)
                     tile_map.team_turn = abs(tile_map.team_turn - 1)
 
 
         
-        for index, team in enumerate(teams):
-            team_map = []
-            for player in team.players:
-                team_map.append([int(player.tile_index / 8), int(player.tile_index % 8)])
 
-            tile_map.team_map[index] = team_map 
 
            
-        tile_map.set_collisions()
         for player in teams[0].players:
             player.draw_player()
         for player in teams[1].players:

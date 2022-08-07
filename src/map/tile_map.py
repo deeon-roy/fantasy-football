@@ -1,13 +1,10 @@
 # pygame imports
 import pygame
 from pygame.locals import *
-from a_star import create_adjacent_list, get_shortest_distance
 # ---------------------------
+from src.map.a_star import create_adjacent_list, get_shortest_distance
+from src.helpers.conversions import cart_to_isometric
 # other imports
-import math
-import sys
-import time
-import random
 import numpy as np
 
 SCREENSIZE = WIDTH, HEIGHT = 1000, 1000
@@ -88,24 +85,21 @@ class TileMap:
 
         print(self.collision_map)
 
-    def cart_to_isometric(self, point):
-        isoX = point[0] - point[1]
-        isoY = (point[0] + point[1])/2
-        return [isoX, isoY]
-
     def set_collisions(self): 
         self.collision_map = np.ones(self.tile_amount**2).reshape(self.tile_amount, -1)
         for team in self.team_map:
             for collision_index in team: 
                 self.collision_map[collision_index[0]][collision_index[1]] = 0
+                
+        self.adjacent_list, _ = create_adjacent_list(self.tile_amount, self.collision_map)
 
     def get_tile_coordinates(self, origin=[0, 0]):
-        point_top = self.cart_to_isometric([origin[0], origin[1]])
-        point_right = self.cart_to_isometric(
+        point_top = cart_to_isometric([origin[0], origin[1]])
+        point_right = cart_to_isometric(
             [origin[0] + self.tile_size, origin[1]])
-        point_bottom = self.cart_to_isometric(
+        point_bottom = cart_to_isometric(
             [origin[0] + self.tile_size, origin[1] + self.tile_size])
-        point_left = self.cart_to_isometric(
+        point_left = cart_to_isometric(
             [origin[0], origin[1] + self.tile_size])
         coordinates = [point_top, point_right, point_bottom, point_left]
 
